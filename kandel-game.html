@@ -1,0 +1,2902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kandel Game — Scoring Tool</title>
+<!-- Fonts: uses native system-ui stack (no external requests) -->
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #6366f1;
+    --primary-dark: #3730a3;
+    --primary-bg: #eef2ff;
+    --accent: #f59e0b;
+    --accent-bg: #fffbeb;
+    --success: #059669;
+    --success-bg: #ecfdf5;
+    --success-light: #d1fae5;
+    --warning: #d97706;
+    --warning-bg: #fff7ed;
+    --warning-light: #fed7aa;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --danger-light: #fecaca;
+    --neutral: #6b7280;
+    --neutral-bg: #f9fafb;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== BACKGROUND PAGE ===== */
+  .bg-hero {
+    position: relative;
+    height: 220px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 20px;
+    background:
+      linear-gradient(135deg, rgba(79, 70, 229, 0.92) 0%, rgba(16, 185, 129, 0.85) 50%, rgba(245, 158, 11, 0.88) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+  }
+  .bg-hero-content { max-width: 720px; }
+  .bg-title {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -1.2px;
+    line-height: 1.05;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+  }
+  .bg-subtitle {
+    font-size: 15px;
+    font-weight: 500;
+    opacity: 0.95;
+    line-height: 1.5;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .bg-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+  .bg-story-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .bg-story-card p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.65;
+    margin-bottom: 10px;
+  }
+  .bg-story-card p:last-child { margin-bottom: 0; }
+  .bg-story-card strong { color: var(--text); }
+
+  .player-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .player-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1.5px solid;
+  }
+  .player-chip span { font-size: 20px; }
+  .player-chip.farmer { background: #fffbeb; border-color: #fbbf24; color: #92400e; }
+  .player-chip.citizen { background: #eff6ff; border-color: #60a5fa; color: #1e40af; }
+  .player-chip.industry { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+  .player-chip.env { background: #ecfdf5; border-color: #34d399; color: #065f46; }
+
+  .land-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .land-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1.5px solid var(--border);
+    border-top: 4px solid;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .land-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .land-card.forest { border-top-color: #059669; }
+  .land-card.arable { border-top-color: #d97706; }
+  .land-card.productive { border-top-color: #ea580c; }
+  .land-card.settlement { border-top-color: #2563eb; }
+  .land-card.grassland { border-top-color: #65a30d; }
+  .land-card.sealed { border-top-color: #6b7280; }
+  .land-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .land-icon { font-size: 28px; line-height: 1; }
+  .land-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .land-count {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 1px;
+  }
+  .land-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 10px;
+    flex: 1;
+  }
+  .land-values {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding: 8px 0;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+  }
+  .lv {
+    flex: 1;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--success);
+    background: var(--success-bg);
+    padding: 5px 4px;
+    border-radius: 6px;
+  }
+  .lv-group {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 1px;
+  }
+  .land-research {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .howto-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .howto-step {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: var(--neutral-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-light);
+  }
+  .howto-num {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .howto-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .howto-step p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .howto-step strong { color: var(--text); }
+
+  @media (max-width: 900px) {
+    .land-grid { grid-template-columns: repeat(2, 1fr); }
+    .howto-grid { grid-template-columns: 1fr; }
+    .bg-grid { grid-template-columns: 1fr; }
+    .bg-title { font-size: 34px; }
+    .bg-hero { height: 200px; }
+  }
+  @media (max-width: 600px) {
+    .land-grid { grid-template-columns: 1fr; }
+    .bg-title { font-size: 28px; }
+    .bg-subtitle { font-size: 13px; }
+    .bg-hero { height: 180px; padding: 20px; }
+    .player-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== TABS ===== */
+  .tabs {
+    display: flex;
+    max-width: 1024px;
+    margin: 0 auto;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .tab {
+    padding: 16px 28px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  .tab:hover {
+    color: var(--primary);
+    background: var(--primary-bg);
+  }
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--primary-bg);
+  }
+  .tab-icon {
+    font-size: 16px;
+  }
+
+  /* ===== PAGES ===== */
+  .page {
+    display: none;
+    padding: 24px 20px;
+    max-width: 1024px;
+    margin: 0 auto;
+    animation: fadeIn 0.2s ease;
+  }
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header {
+    margin-bottom: 24px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-header p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  /* ===== CARD / SECTION ===== */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon {
+    font-size: 18px;
+  }
+  .card-description {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background: var(--neutral-bg);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+  }
+
+  /* ===== CONFIG TABLE ===== */
+  .config-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .config-table th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+  .config-table td {
+    padding: 10px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .config-table tr:last-child td {
+    border-bottom: none;
+  }
+  .config-table tr:hover td {
+    background: var(--primary-bg);
+  }
+  .config-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 160px;
+  }
+  .config-table input[type="number"] {
+    width: 72px;
+    padding: 8px 10px;
+    text-align: center;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--neutral-bg);
+    transition: all 0.15s ease;
+  }
+  .config-table input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-primary:hover {
+    background: var(--primary-dark);
+    box-shadow: var(--shadow-md);
+  }
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+  .btn-success:hover {
+    background: #047857;
+    box-shadow: var(--shadow-md);
+  }
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+  .btn-danger:hover {
+    background: #b91c1c;
+    box-shadow: var(--shadow-md);
+  }
+  .btn-outline {
+    background: var(--surface);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border);
+  }
+  .btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-bg);
+  }
+  .saved-msg {
+    display: none;
+    color: var(--success);
+    font-weight: 600;
+    font-size: 13px;
+    margin-left: 12px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* ===== GAME HEADER ===== */
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .game-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    transition: all 0.15s ease;
+    user-select: none;
+    background: var(--surface);
+  }
+  .toggle-label:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .toggle-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+
+  /* ===== LEGEND ===== */
+  .legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .legend-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 2px solid;
+  }
+  .legend-box.restrict {
+    background: var(--warning-bg);
+    border-color: var(--warning);
+  }
+  .legend-box.prefer {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .legend-box.none {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  /* ===== TOOLBAR ===== */
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar-left, .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .search-box input {
+    padding: 8px 12px 8px 32px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    width: 140px;
+    transition: all 0.15s ease;
+    background: var(--surface);
+  }
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    width: 180px;
+  }
+  .toggle-group {
+    display: flex;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .toggle-btn {
+    padding: 7px 14px;
+    border: none;
+    background: var(--surface);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+  }
+  .toggle-btn:first-child {
+    border-right: 1.5px solid var(--border);
+  }
+  .toggle-btn:hover {
+    background: var(--primary-bg);
+    color: var(--primary);
+  }
+  .toggle-btn.active {
+    background: var(--primary);
+    color: white;
+  }
+
+  /* ===== FILTER TAGS ===== */
+  .filter-tags {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filter-tag {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+  }
+  .filter-tag:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-bg);
+  }
+  .filter-tag.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+
+  /* ===== GAME TABLE ===== */
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .game-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 520px;
+  }
+  .game-table thead th {
+    background: var(--primary);
+    color: white;
+    padding: 11px 10px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.15);
+  }
+  .game-table thead th:last-child {
+    border-right: none;
+  }
+  .game-table thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+  }
+  .game-table thead th.sortable:hover {
+    background: var(--primary-dark);
+  }
+  .sort-arrow {
+    font-size: 10px;
+    margin-left: 4px;
+    opacity: 0.6;
+  }
+  .sort-arrow.active {
+    opacity: 1;
+  }
+  .game-table thead th.group-col.hidden {
+    display: none;
+  }
+  .game-table td.group-col.hidden {
+    display: none;
+  }
+  .game-table td {
+    padding: 7px 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+  }
+  .game-table tbody tr {
+    transition: background 0.1s ease;
+  }
+  .game-table tbody tr:hover {
+    background: var(--primary-bg);
+  }
+  .game-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .game-table tfoot td {
+    background: var(--neutral-bg);
+    font-weight: 700;
+    border-top: 2px solid var(--border);
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .game-table .hex-id {
+    font-weight: 700;
+    color: var(--primary);
+    text-align: left;
+    font-size: 12px;
+    min-width: 36px;
+  }
+  .game-table .land-use {
+    text-align: left;
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 90px;
+    text-transform: capitalize;
+  }
+  .game-table .road-yes {
+    color: var(--success);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .game-table .road-no {
+    color: var(--text-muted);
+  }
+
+  /* ===== INPUT CELLS (SELECTS) ===== */
+  .input-cell select {
+    width: 100%;
+    padding: 5px 6px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    background: var(--surface);
+    color: var(--text);
+    transition: all 0.15s ease;
+    min-width: 80px;
+  }
+  .input-cell select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  }
+  .input-cell select.select-prefer {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: #065f46;
+  }
+  .input-cell select.select-restrict {
+    background: var(--warning-bg);
+    border-color: var(--warning);
+    color: #92400e;
+  }
+
+  /* ===== SCORE CELLS ===== */
+  .score-pos {
+    color: var(--success);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .score-neg {
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .score-zero {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .score-col {
+    font-size: 11px;
+    min-width: 40px;
+  }
+
+  /* ===== SUMMARY ===== */
+  .summary {
+    margin-top: 24px;
+  }
+  .summary-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .summary-card {
+    padding: 20px 16px;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    border: 1.5px solid;
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+  }
+  .summary-card.farmer {
+    background: #fffbeb;
+    border-color: #fbbf24;
+  }
+  .summary-card.farmer::before { background: #f59e0b; }
+  .summary-card.citizen {
+    background: #eff6ff;
+    border-color: #60a5fa;
+  }
+  .summary-card.citizen::before { background: #3b82f6; }
+  .summary-card.env {
+    background: #ecfdf5;
+    border-color: #34d399;
+  }
+  .summary-card.env::before { background: #10b981; }
+  .summary-card.industry {
+    background: #fef2f2;
+    border-color: #fca5a5;
+  }
+  .summary-card.industry::before { background: #ef4444; }
+  .summary-card .group-name {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .summary-card .score {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    margin: 8px 0;
+  }
+  .summary-card .r1, .summary-card .r2 {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .summary-card .status {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  .status-happy {
+    color: var(--success);
+    background: var(--success-bg);
+  }
+  .status-unhappy {
+    color: var(--danger);
+    background: var(--danger-bg);
+  }
+  .status-neutral {
+    color: var(--warning);
+    background: var(--accent-bg);
+  }
+
+  /* ===== RULES LIST ===== */
+  .rules-list {
+    margin-left: 20px;
+    line-height: 2;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .rules-list li {
+    margin-bottom: 2px;
+  }
+  .rules-list strong {
+    color: var(--text);
+  }
+
+  /* ===== RESULT LIST ===== */
+  .result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.15s ease;
+  }
+  .result-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+  }
+  .result-hex {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--primary);
+    min-width: 40px;
+  }
+  .result-land {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 120px;
+  }
+  .result-groups {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .result-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .result-badge.prefer {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success);
+  }
+  .result-badge.restrict {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+  }
+  .result-badge.road {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+  .result-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .page {
+      padding: 16px 12px;
+    }
+    .tab {
+      padding: 12px 16px;
+      font-size: 13px;
+    }
+    .card {
+      padding: 18px 14px;
+    }
+    .config-table {
+      font-size: 12px;
+    }
+    .config-table th, .config-table td {
+      padding: 8px 10px;
+    }
+    .config-table input[type="number"] {
+      width: 56px;
+      padding: 6px 4px;
+      font-size: 13px;
+    }
+    .summary-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .summary-card .score {
+      font-size: 24px;
+    }
+    .game-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .game-header-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .page-header h1 {
+      font-size: 18px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .tabs {
+      flex-direction: column;
+    }
+    .tab {
+      justify-content: center;
+      border-bottom: none;
+      border-left: 3px solid transparent;
+    }
+    .tab.active {
+      border-bottom: none;
+      border-left-color: var(--primary);
+    }
+    .summary-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .toolbar-left, .toolbar-right {
+      justify-content: center;
+    }
+  }
+
+  /* ===== ROUND INDICATOR (CLICKABLE) ===== */
+  .round-indicator {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .round-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1.5px solid;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.2s ease;
+    color: var(--text);
+  }
+  .round-step:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .round-step:focus { outline: none; }
+  .round-step:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .round-step.step-restrict {
+    border-color: var(--warning);
+    background: var(--warning-bg);
+  }
+  .round-step.step-restrict:hover { background: var(--warning-light); }
+  .round-step.step-prefer {
+    border-color: var(--success);
+    background: var(--success-bg);
+  }
+  .round-step.step-prefer:hover { background: var(--success-light); }
+  .round-step.step-conflict {
+    border-color: #a855f7;
+    background: #faf5ff;
+  }
+  .round-step.step-conflict:hover { background: #f3e8ff; }
+  .round-step-icon {
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .round-step-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .round-step-num {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.75;
+  }
+  .round-step.step-restrict .round-step-num { color: var(--warning); }
+  .round-step.step-prefer .round-step-num { color: var(--success); }
+  .round-step.step-conflict .round-step-num { color: #a855f7; }
+  .round-step-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .round-step-count {
+    display: inline-block;
+    background: var(--text-secondary);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 8px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .round-step.step-restrict .round-step-count { background: var(--warning); }
+  .round-step.step-prefer .round-step-count { background: var(--success); }
+  .round-step-hint {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+
+  /* ===== BULK ACTION MODAL ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 720px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlide 0.2s ease;
+  }
+  @keyframes modalSlide {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-close {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: var(--neutral-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+  .modal-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-section-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--neutral-bg);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .modal-footer-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .modal-footer-actions { display: flex; gap: 8px; }
+
+  .bulk-group-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .bulk-group-btn {
+    padding: 10px 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .bulk-group-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+  }
+  .bulk-group-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .bulk-group-btn .icon { font-size: 20px; }
+
+  .bulk-hex-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 5px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--neutral-bg);
+  }
+  .bulk-hex {
+    aspect-ratio: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+    font-size: 9px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .bulk-hex:hover {
+    border-color: var(--primary);
+    transform: scale(1.15);
+    z-index: 2;
+  }
+  .bulk-hex.selected {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  /* ===== SCORE PULSE ANIMATION ===== */
+  @keyframes scorePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .score-pulse {
+    animation: scorePulse 0.4s ease;
+    transform-origin: center;
+  }
+
+  /* ===== DETAILED RESULTS HEX GRID ===== */
+  .hex-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    background: var(--neutral-bg);
+    border-radius: 8px;
+  }
+  .hex-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .hex-mini {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .hex-mini.protected { background: var(--warning); }
+  .hex-mini.developed { background: var(--success); }
+  .hex-mini.conflict  { background: #a855f7; }
+  .hex-mini.empty     { background: var(--border); }
+  .hex-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+  }
+  .hex-cell {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: transform 0.1s ease;
+    border: none;
+    font-family: inherit;
+    padding: 0;
+  }
+  .hex-cell:hover {
+    transform: scale(1.2);
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .hex-cell.protected { background: var(--warning); }
+  .hex-cell.developed { background: var(--success); }
+  .hex-cell.conflict  { background: #a855f7; }
+  .hex-cell.empty     { background: var(--border); color: var(--text-muted); }
+
+  @media (max-width: 600px) {
+    .round-step-hint { display: none; }
+    .hex-grid        { grid-template-columns: repeat(7, 1fr); }
+    .bulk-group-selector { grid-template-columns: repeat(2, 1fr); }
+    .bulk-hex-grid   { grid-template-columns: repeat(8, 1fr); }
+    .round-indicator { gap: 6px; }
+  }
+
+  /* ===== TOAST NOTIFICATION ===== */
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .toast {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    background: #059669;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    z-index: 1000;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    animation: toastIn 0.25s ease;
+  }
+
+  /* ===== PRINT ===== */
+  @media print {
+    .tabs, .btn, .toggle-label, .toolbar { display: none !important; }
+    .page { display: block !important; padding: 10px; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showPage('background')">
+    <span class="tab-icon">📖</span> Background
+  </div>
+  <div class="tab" onclick="showPage('config')">
+    <span class="tab-icon">⚙️</span> Configuration
+  </div>
+  <div class="tab" onclick="showPage('game')">
+    <span class="tab-icon">🎮</span> Game Board
+  </div>
+  <div class="tab" onclick="showPage('results')">
+    <span class="tab-icon">📊</span> Results
+  </div>
+</div>
+
+<!-- PAGE 0: BACKGROUND STORY -->
+<div id="background" class="page active">
+
+  <!-- Hero with map -->
+  <div class="bg-hero">
+    <div class="bg-hero-content">
+      <h1 class="bg-title">Welcome to Kandel</h1>
+      <p class="bg-subtitle">A negotiation game about solar panels, farmland, and the future of energy</p>
+    </div>
+  </div>
+
+  <!-- Story grid -->
+  <div class="bg-grid">
+    <div class="bg-story-card">
+      <div class="card-title">
+        <span class="icon">📍</span> The Setting
+      </div>
+      <p>Kandel is a small town in Rhineland-Palatinate, Germany — at the heart of one of Europe's largest solar energy debates. In 2022, a proposed <strong>freiflächenphotovoltaik</strong> (open-space PV) installation sparked a regional controversy: hundreds of hectares of agricultural land potentially converted to solar.</p>
+      <p>This game uses a fictional 50-hex map of Kandel to simulate the trade-offs four stakeholder groups face when deciding where solar panels should — or should not — go.</p>
+    </div>
+
+    <div class="bg-story-card">
+      <div class="card-title">
+        <span class="icon">👥</span> The Players
+      </div>
+      <div class="player-grid">
+        <div class="player-chip farmer"><span>🌾</span> Farmer</div>
+        <div class="player-chip citizen"><span>🏠</span> Citizen</div>
+        <div class="player-chip industry"><span>🏭</span> Industry</div>
+        <div class="player-chip env"><span>🌳</span> Environment</div>
+      </div>
+      <p style="margin-top:12px; font-size:12px; color:var(--text-secondary); line-height:1.6;">Each group votes to <strong>restrict</strong> (protect) or <strong>prefer</strong> (develop) hexes across <em>three rounds</em>: Restrictions → Preferences → Conflict Resolution.</p>
+    </div>
+  </div>
+
+  <!-- Land Types -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title">
+      <span class="icon">🗺️</span> The Land — 50 Hexes, 6 Types
+    </div>
+    <div class="card-description">
+      Each hex represents a piece of land. Its type determines who cares about it — and how much.
+    </div>
+
+    <div class="land-grid">
+
+      <!-- Forest -->
+      <div class="land-card forest">
+        <div class="land-head">
+          <div class="land-icon">🌲</div>
+          <div>
+            <div class="land-name">Forest</div>
+            <div class="land-count">12 hexes · 24%</div>
+          </div>
+        </div>
+        <p class="land-desc">Mature woodland with high biodiversity, carbon storage, and visual amenity. Citizens value the view; ecologists value the ecosystem.</p>
+        <div class="land-values">
+          <div class="lv"><span class="lv-group">🌾</span>+2</div>
+          <div class="lv"><span class="lv-group">🏠</span>+5</div>
+          <div class="lv"><span class="lv-group">🌳</span>+5</div>
+        </div>
+        <div class="land-research">💡 Gaur (2023): WTP $45/mo · NPV $377k/ha &gt; Solar $246k/ha</div>
+      </div>
+
+      <!-- Arable Land -->
+      <div class="land-card arable">
+        <div class="land-head">
+          <div class="land-icon">🌾</div>
+          <div>
+            <div class="land-name">Arable Land</div>
+            <div class="land-count">10 hexes · 20%</div>
+          </div>
+        </div>
+        <p class="land-desc">Cultivated cropland. Produces grain and vegetables with moderate soil quality. Loss of food production is the main concern.</p>
+        <div class="land-values">
+          <div class="lv"><span class="lv-group">🌾</span>+3</div>
+          <div class="lv"><span class="lv-group">🏠</span>+1</div>
+          <div class="lv"><span class="lv-group">🌳</span>0</div>
+        </div>
+        <div class="land-research">💡 Gaur (2023): WTP $13/mo · IEEFA: lease $450–$1,500/acre</div>
+      </div>
+
+      <!-- Productive Agriculture -->
+      <div class="land-card productive">
+        <div class="land-head">
+          <div class="land-icon">🌱</div>
+          <div>
+            <div class="land-name">Productive Agriculture</div>
+            <div class="land-count">8 hexes · 16%</div>
+          </div>
+        </div>
+        <p class="land-desc">High-yield farmland with premium soil. Often vineyard or orchard. The most economically valuable agricultural land — and the most contested.</p>
+        <div class="land-values">
+          <div class="lv"><span class="lv-group">🌾</span>+5</div>
+          <div class="lv"><span class="lv-group">🏠</span>+2</div>
+          <div class="lv"><span class="lv-group">🌳</span>+1</div>
+        </div>
+        <div class="land-research">💡 PV Magazine (2025): Farmer lease $1,000+/acre/year</div>
+      </div>
+
+      <!-- Settlement -->
+      <div class="land-card settlement">
+        <div class="land-head">
+          <div class="land-icon">🏘️</div>
+          <div>
+            <div class="land-name">Settlement</div>
+            <div class="land-count">8 hexes · 16%</div>
+          </div>
+        </div>
+        <p class="land-desc">Residential areas. Citizens worry about visual impact, glare, and the loss of community character — not food or ecology.</p>
+        <div class="land-values">
+          <div class="lv"><span class="lv-group">🌾</span>0</div>
+          <div class="lv"><span class="lv-group">🏠</span>+4</div>
+          <div class="lv"><span class="lv-group">🌳</span>0</div>
+        </div>
+        <div class="land-research">💡 Visual amenity is the primary Citizen concern near homes</div>
+      </div>
+
+      <!-- Grassland -->
+      <div class="land-card grassland">
+        <div class="land-head">
+          <div class="land-icon">🌿</div>
+          <div>
+            <div class="land-name">Grassland</div>
+            <div class="land-count">7 hexes · 14%</div>
+          </div>
+        </div>
+        <p class="land-desc">Meadows and pasture. Moderate ecological value as habitat and carbon sink. Often grazed by livestock.</p>
+        <div class="land-values">
+          <div class="lv"><span class="lv-group">🌾</span>+1</div>
+          <div class="lv"><span class="lv-group">🏠</span>+1</div>
+          <div class="lv"><span class="lv-group">🌳</span>+2</div>
+        </div>
+        <div class="land-research">💡 Moderate biodiversity and carbon storage value</div>
+      </div>
+
+      <!-- Sealed -->
+      <div class="land-card sealed">
+        <div class="land-head">
+          <div class="land-icon">🏭</div>
+          <div>
+            <div class="land-name">Sealed</div>
+            <div class="land-count">5 hexes · 10%</div>
+          </div>
+        </div>
+        <p class="land-desc">Already paved or built. No agricultural or ecological value — but restricting it means lost opportunity for urban solar development.</p>
+        <div class="land-values">
+          <div class="lv"><span class="lv-group">🌾</span>0</div>
+          <div class="lv"><span class="lv-group">🏠</span>−2</div>
+          <div class="lv"><span class="lv-group">🌳</span>−1</div>
+        </div>
+        <div class="land-research">💡 PV on sealed = green development, no new land disturbed</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- How to Play -->
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🎮</span> How to Play
+    </div>
+    <div class="howto-grid">
+      <div class="howto-step">
+        <div class="howto-num">1</div>
+        <div>
+          <div class="howto-title">Round 1 — Restrictions</div>
+          <p>All groups vote on all 50 hexes. <strong>Restrict</strong> a hex to protect it from PV. If no one prefers it, all groups that care about that land earn protection points.</p>
+        </div>
+      </div>
+      <div class="howto-step">
+        <div class="howto-num">2</div>
+        <div>
+          <div class="howto-title">Round 2 — Preferences</div>
+          <p>Vote again. <strong>Prefer</strong> a hex to build PV there. If built, all groups that care about that land lose impact points.</p>
+        </div>
+      </div>
+      <div class="howto-step">
+        <div class="howto-num">3</div>
+        <div>
+          <div class="howto-title">Round 3 — Conflict Resolution</div>
+          <p>Hexes with <em>both</em> restrict and prefer votes go to negotiation. No automatic scoring — discuss, trade, and decide.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:18px; text-align:center;">
+      <button class="btn btn-primary" onclick="showPageDirect('config')">⚙️ Start: Configure Scoring →</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- PAGE 1: CONFIGURATION -->
+<div id="config" class="page">
+  <div class="page-header">
+    <h1>⚙️ Scoring Configuration</h1>
+    <p>Configure scoring values for each group. Restriction = protection value (PLUS). Preference = impact value (MINUS).</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🌾</span> Land Type Scoring
+    </div>
+    <div class="card-description">
+      <strong>Farmer, Citizen, Environment</strong> — Restriction = protection value (PLUS). Preference = impact value (MINUS).
+    </div>
+    <table class="config-table">
+      <tr>
+        <th>Land Type</th>
+        <th>🌾 Farmer</th>
+        <th>🏠 Citizen</th>
+        <th>🌳 Environment</th>
+      </tr>
+      <tr>
+        <td>Productive Agriculture</td>
+        <td><input type="number" id="prod_agri_f" value="5"></td>
+        <td><input type="number" id="prod_agri_c" value="2"></td>
+        <td><input type="number" id="prod_agri_e" value="1"></td>
+      </tr>
+      <tr>
+        <td>Arable Land</td>
+        <td><input type="number" id="arable_f" value="3"></td>
+        <td><input type="number" id="arable_c" value="1"></td>
+        <td><input type="number" id="arable_e" value="0"></td>
+      </tr>
+      <tr>
+        <td>Forest</td>
+        <td><input type="number" id="forest_f" value="2"></td>
+        <td><input type="number" id="forest_c" value="5"></td>
+        <td><input type="number" id="forest_e" value="5"></td>
+      </tr>
+      <tr>
+        <td>Grassland</td>
+        <td><input type="number" id="grassland_f" value="1"></td>
+        <td><input type="number" id="grassland_c" value="1"></td>
+        <td><input type="number" id="grassland_e" value="2"></td>
+      </tr>
+      <tr>
+        <td>Settlement</td>
+        <td><input type="number" id="settlement_f" value="0"></td>
+        <td><input type="number" id="settlement_c" value="4"></td>
+        <td><input type="number" id="settlement_e" value="0"></td>
+      </tr>
+      <tr>
+        <td>Sealed</td>
+        <td><input type="number" id="sealed_f" value="0" title="Protected: 0, PV Built: 0"></td>
+        <td><input type="number" id="sealed_c" value="-2" title="Protected: -2 (lost opportunity), PV Built: +2 (urban benefit)"></td>
+        <td><input type="number" id="sealed_e" value="-1" title="Protected: -1 (lost opportunity), PV Built: +1 (green development)"></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🛣️</span> Road Scoring
+    </div>
+    <div class="card-description">
+      <strong>Industry Only</strong> — Road access scoring for the Industry group.
+    </div>
+    <table class="config-table">
+      <tr>
+        <th>Scenario</th>
+        <th>🏭 Industry</th>
+      </tr>
+      <tr>
+        <td>Preferred + has road</td>
+        <td><input type="number" id="road_prefer_has" value="3"></td>
+      </tr>
+      <tr>
+        <td>Preferred + no road</td>
+        <td><input type="number" id="road_prefer_no" value="-2"></td>
+      </tr>
+      <tr>
+        <td>Road restricted</td>
+        <td><input type="number" id="road_restricted" value="-3"></td>
+      </tr>
+      <tr>
+        <td>Others preferred (road hex)</td>
+        <td><input type="number" id="road_other_prefer" value="-1"></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">📝</span> Rules
+    </div>
+    <ul class="rules-list">
+      <li><strong>Restrict (0):</strong> If no one prefers → +Value (protection worked)</li>
+      <li><strong>Restrict (0):</strong> If someone prefers → Conflict (goes to Round 3)</li>
+      <li><strong>Prefer (1):</strong> If PV built → -Value (you lose)</li>
+      <li><strong>Industry special:</strong> Their OWN score is based on road access only, but their vote also impacts F/C/E’s land scores</li>
+    </ul>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <button class="btn btn-success" onclick="saveConfig()">💾 Save Configuration</button>
+    <span class="saved-msg" id="savedMsg">✓ Saved!</span>
+  </div>
+</div>
+
+<!-- PAGE 2: GAME BOARD -->
+<div id="game" class="page">
+  <div class="game-header">
+    <div class="page-header" style="margin-bottom: 0;">
+      <h1>🎮 Game Board</h1>
+    </div>
+  </div>
+
+  <div class="round-indicator">
+    <button type="button" class="round-step step-restrict" onclick="openBulkModal('restrict')">
+      <div class="round-step-icon">🚫</div>
+      <div class="round-step-content">
+        <div class="round-step-num">Step 1</div>
+        <div class="round-step-label">Restrictions <span class="round-step-count" id="restrictCount">0</span></div>
+        <div class="round-step-hint">Click to bulk-restrict hexes</div>
+      </div>
+    </button>
+    <button type="button" class="round-step step-prefer" onclick="openBulkModal('prefer')">
+      <div class="round-step-icon">⚡</div>
+      <div class="round-step-content">
+        <div class="round-step-num">Step 2</div>
+        <div class="round-step-label">Preferences <span class="round-step-count" id="preferCount">0</span></div>
+        <div class="round-step-hint">Click to bulk-prefer hexes</div>
+      </div>
+    </button>
+    <button type="button" class="round-step step-conflict" onclick="showPageDirect('results')">
+      <div class="round-step-icon">🤝</div>
+      <div class="round-step-content">
+        <div class="round-step-num">Step 3</div>
+        <div class="round-step-label">Conflict</div>
+        <div class="round-step-hint">View results & negotiate</div>
+      </div>
+    </button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <span class="legend-box prefer"></span> Preference
+    </div>
+    <div class="legend-item">
+      <span class="legend-box restrict"></span> Restricted
+    </div>
+    <div class="legend-item">
+      <span class="legend-box none"></span> No vote
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="hexSearch" placeholder="Search hex..." oninput="filterHexes()">
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <label class="toggle-label">
+        <input type="checkbox" id="showScores" onchange="toggleScores()">
+        <span>Show scores</span>
+      </label>
+      <button class="btn btn-outline" onclick="loadDemo()">🎲 Demo</button>
+      <button class="btn btn-danger" onclick="resetGame()">🔄 Reset</button>
+    </div>
+  </div>
+  
+  <div class="filter-tags">
+    <button class="filter-tag active" onclick="toggleFilter('all', this)">All</button>
+    <button class="filter-tag" onclick="toggleFilter('arrable_land', this)">🌾 Arable</button>
+    <button class="filter-tag" onclick="toggleFilter('productive_agriculture', this)">🌾 Prod. Agri</button>
+    <button class="filter-tag" onclick="toggleFilter('forest', this)">🌳 Forest</button>
+    <button class="filter-tag" onclick="toggleFilter('grassland', this)">🌿 Grassland</button>
+    <button class="filter-tag" onclick="toggleFilter('settlement', this)">🏠 Settlement</button>
+    <button class="filter-tag" onclick="toggleFilter('sealed', this)">🏭 Sealed</button>
+    <button class="filter-tag" onclick="toggleFilter('road', this)">🛣️ Road</button>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="game-table">
+      <thead>
+        <tr>
+          <th class="sortable" onclick="sortHexes('id')">Hex <span class="sort-arrow" id="arrow-id">↕</span></th>
+          <th class="sortable" onclick="sortHexes('land')">Land Type <span class="sort-arrow" id="arrow-land">↕</span></th>
+          <th class="sortable" onclick="sortHexes('road')">Road <span class="sort-arrow" id="arrow-road">↕</span></th>
+          <th class="sortable group-col" onclick="sortHexes('farmer')">🌾 Farmer <span class="sort-arrow" id="arrow-farmer">↕</span></th>
+          <th class="sortable group-col" onclick="sortHexes('citizen')">🏠 Citizen <span class="sort-arrow" id="arrow-citizen">↕</span></th>
+          <th class="sortable group-col" onclick="sortHexes('industry')">🏭 Industry <span class="sort-arrow" id="arrow-industry">↕</span></th>
+          <th class="sortable group-col" onclick="sortHexes('environment')">🌳 Env <span class="sort-arrow" id="arrow-environment">↕</span></th>
+          <th class="score-col" style="display:none;">R1 F</th>
+          <th class="score-col" style="display:none;">R1 C</th>
+          <th class="score-col" style="display:none;">R1 I</th>
+          <th class="score-col" style="display:none;">R1 E</th>
+          <th class="score-col" style="display:none;">R2 F</th>
+          <th class="score-col" style="display:none;">R2 C</th>
+          <th class="score-col" style="display:none;">R2 I</th>
+          <th class="score-col" style="display:none;">R2 E</th>
+        </tr>
+      </thead>
+      <tbody id="gameBody">
+        <!-- Generated by JS -->
+      </tbody>
+      <tfoot id="gameFoot">
+        <!-- Totals -->
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="summary card">
+    <div class="summary-title">📊 Final Scores</div>
+    <div class="summary-grid">
+      <div class="summary-card farmer">
+        <div class="group-name">🌾 Farmer</div>
+        <div class="r1" id="sumF_R1">R1: 0</div>
+        <div class="r2" id="sumF_R2">R2: 0</div>
+        <div class="score" id="sumF_Total">0</div>
+        <div class="status" id="sumF_Status">🟡 Neutral</div>
+      </div>
+      <div class="summary-card citizen">
+        <div class="group-name">🏠 Citizen</div>
+        <div class="r1" id="sumC_R1">R1: 0</div>
+        <div class="r2" id="sumC_R2">R2: 0</div>
+        <div class="score" id="sumC_Total">0</div>
+        <div class="status" id="sumC_Status">🟡 Neutral</div>
+      </div>
+      <div class="summary-card env">
+        <div class="group-name">🌳 Environment</div>
+        <div class="r1" id="sumE_R1">R1: 0</div>
+        <div class="r2" id="sumE_R2">R2: 0</div>
+        <div class="score" id="sumE_Total">0</div>
+        <div class="status" id="sumE_Status">🟡 Neutral</div>
+      </div>
+      <div class="summary-card industry">
+        <div class="group-name">🏭 Industry</div>
+        <div class="r1" id="sumI_R1">R1: 0</div>
+        <div class="r2" id="sumI_R2">R2: 0</div>
+        <div class="score" id="sumI_Total">0</div>
+        <div class="status" id="sumI_Status">🟡 Neutral</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: RESULTS -->
+<div id="results" class="page">
+  <div class="page-header">
+    <h1>📊 Results & Discussion</h1>
+    <p>Consensus and conflict analysis for Round 3 negotiation.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🤝</span> Consensus (2+ Groups Agree)
+    </div>
+    <div class="card-description">
+      Hexes where 2 or more groups prefer the same location. Good for quick agreement.
+    </div>
+    <div id="consensusList" class="result-list">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">⚠️</span> Conflicts (Needs Discussion)
+    </div>
+    <div class="card-description">
+      Hexes where some groups prefer and others restrict. Must negotiate in Round 3.
+    </div>
+    <div id="conflictList" class="result-list">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🗺️</span> Detailed Breakdown (All 50 Hexes)
+    </div>
+    <div class="card-description">
+      Each hex colored by its final outcome. Hover for details. Click to jump back to the Game Board.
+    </div>
+    <div class="hex-legend">
+      <div class="hex-legend-item"><span class="hex-mini protected"></span> Protected (R1 points)</div>
+      <div class="hex-legend-item"><span class="hex-mini developed"></span> Developed (PV built)</div>
+      <div class="hex-legend-item"><span class="hex-mini conflict"></span> Conflict → Round 3</div>
+      <div class="hex-legend-item"><span class="hex-mini empty"></span> No votes</div>
+    </div>
+    <div id="hexGrid" class="hex-grid">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">💡</span> Discussion Notes
+    </div>
+    <textarea id="discussionNotes" placeholder="Write discussion notes here..." style="width:100%; min-height:150px; padding:12px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
+  </div>
+</div>
+
+<script>
+// ============================================
+// GAME DATA
+// ============================================
+const hexes = [
+  {id:'A6', land:'arrable_land', road:false},
+  {id:'B6', land:'arrable_land', road:false},
+  {id:'C5', land:'arrable_land', road:false},
+  {id:'C6', land:'arrable_land', road:true},
+  {id:'D4', land:'arrable_land', road:false},
+  {id:'D5', land:'productive_agriculture', road:false},
+  {id:'D6', land:'sealed', road:true},
+  {id:'E1', land:'arrable_land', road:false},
+  {id:'E2', land:'arrable_land', road:true},
+  {id:'E3', land:'settlement', road:true},
+  {id:'E4', land:'productive_agriculture', road:true},
+  {id:'E5', land:'productive_agriculture', road:true},
+  {id:'E6', land:'settlement', road:false},
+  {id:'F1', land:'sealed', road:true},
+  {id:'F2', land:'settlement', road:true},
+  {id:'F3', land:'productive_agriculture', road:false},
+  {id:'F4', land:'productive_agriculture', road:false},
+  {id:'F5', land:'productive_agriculture', road:true},
+  {id:'F6', land:'settlement', road:false},
+  {id:'F7', land:'forest', road:false},
+  {id:'G1', land:'grassland', road:false},
+  {id:'G2', land:'grassland', road:false},
+  {id:'G3', land:'forest', road:false},
+  {id:'G4', land:'arrable_land', road:true},
+  {id:'G5', land:'arrable_land', road:false},
+  {id:'G6', land:'grassland', road:false},
+  {id:'H1', land:'forest', road:false},
+  {id:'H2', land:'forest', road:false},
+  {id:'H3', land:'forest', road:false},
+  {id:'H4', land:'sealed', road:true},
+  {id:'H5', land:'arrable_land', road:false},
+  {id:'H6', land:'forest', road:false},
+  {id:'H7', land:'grassland', road:false},
+  {id:'I2', land:'sealed', road:true},
+  {id:'I3', land:'settlement', road:true},
+  {id:'I4', land:'sealed', road:true},
+  {id:'I5', land:'settlement', road:false},
+  {id:'I6', land:'forest', road:false},
+  {id:'J3', land:'grassland', road:false},
+  {id:'J4', land:'arrable_land', road:true},
+  {id:'J5', land:'settlement', road:false},
+  {id:'J6', land:'grassland', road:true},
+  {id:'K3', land:'productive_agriculture', road:false},
+  {id:'K4', land:'settlement', road:true},
+  {id:'K5', land:'grassland', road:true},
+  {id:'L3', land:'forest', road:false},
+  {id:'L4', land:'forest', road:false},
+  {id:'L5', land:'forest', road:false},
+  {id:'M3', land:'forest', road:false},
+  {id:'M4', land:'forest', road:false}
+];
+
+// ============================================
+// CONFIGURATION (default values)
+// ============================================
+let config = {
+  // Land Type: Protection/Impact values
+  prod_agri: {f:5, c:2, e:1},
+  arable: {f:3, c:1, e:0},
+  forest: {f:2, c:5, e:5},
+  grassland: {f:1, c:1, e:2},
+  settlement: {f:0, c:4, e:0},
+  sealed: {f:0, c:-2, e:-1},
+  // Road scoring
+  road_prefer_has: 3,
+  road_prefer_no: -2,
+  road_restricted: -3,
+  road_other_prefer: -1
+};
+
+// ============================================
+// LOAD/SAVE CONFIG
+// ============================================
+function loadConfig() {
+  const saved = localStorage.getItem('kandel_config');
+  if (saved) config = JSON.parse(saved);
+  updateConfigInputs();
+}
+
+function saveConfig() {
+  readConfigInputs();
+  localStorage.setItem('kandel_config', JSON.stringify(config));
+  const msg = document.getElementById('savedMsg');
+  msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 2000);
+}
+
+function updateConfigInputs() {
+  document.getElementById('prod_agri_f').value = config.prod_agri.f;
+  document.getElementById('prod_agri_c').value = config.prod_agri.c;
+  document.getElementById('prod_agri_e').value = config.prod_agri.e;
+  document.getElementById('arable_f').value = config.arable.f;
+  document.getElementById('arable_c').value = config.arable.c;
+  document.getElementById('arable_e').value = config.arable.e;
+  document.getElementById('forest_f').value = config.forest.f;
+  document.getElementById('forest_c').value = config.forest.c;
+  document.getElementById('forest_e').value = config.forest.e;
+  document.getElementById('grassland_f').value = config.grassland.f;
+  document.getElementById('grassland_c').value = config.grassland.c;
+  document.getElementById('grassland_e').value = config.grassland.e;
+  document.getElementById('settlement_f').value = config.settlement.f;
+  document.getElementById('settlement_c').value = config.settlement.c;
+  document.getElementById('settlement_e').value = config.settlement.e;
+  document.getElementById('sealed_f').value = config.sealed.f;
+  document.getElementById('sealed_c').value = config.sealed.c;
+  document.getElementById('sealed_e').value = config.sealed.e;
+  document.getElementById('road_prefer_has').value = config.road_prefer_has;
+  document.getElementById('road_prefer_no').value = config.road_prefer_no;
+  document.getElementById('road_restricted').value = config.road_restricted;
+  document.getElementById('road_other_prefer').value = config.road_other_prefer;
+}
+
+function readConfigInputs() {
+  config.prod_agri = {f:+document.getElementById('prod_agri_f').value, c:+document.getElementById('prod_agri_c').value, e:+document.getElementById('prod_agri_e').value};
+  config.arable = {f:+document.getElementById('arable_f').value, c:+document.getElementById('arable_c').value, e:+document.getElementById('arable_e').value};
+  config.forest = {f:+document.getElementById('forest_f').value, c:+document.getElementById('forest_c').value, e:+document.getElementById('forest_e').value};
+  config.grassland = {f:+document.getElementById('grassland_f').value, c:+document.getElementById('grassland_c').value, e:+document.getElementById('grassland_e').value};
+  config.settlement = {f:+document.getElementById('settlement_f').value, c:+document.getElementById('settlement_c').value, e:+document.getElementById('settlement_e').value};
+  config.sealed = {f:+document.getElementById('sealed_f').value, c:+document.getElementById('sealed_c').value, e:+document.getElementById('sealed_e').value};
+  config.road_prefer_has = +document.getElementById('road_prefer_has').value;
+  config.road_prefer_no = +document.getElementById('road_prefer_no').value;
+  config.road_restricted = +document.getElementById('road_restricted').value;
+  config.road_other_prefer = +document.getElementById('road_other_prefer').value;
+}
+
+// ============================================
+// GET SCORE FOR LAND TYPE
+// ============================================
+function getLandScore(land, group) {
+  const map = {
+    'productive_agriculture': config.prod_agri,
+    'arrable_land': config.arable,
+    'forest': config.forest,
+    'grassland': config.grassland,
+    'settlement': config.settlement,
+    'sealed': config.sealed
+  };
+  const scores = map[land] || {f:0, c:0, e:0};
+  if (group === 'farmer') return scores.f;
+  if (group === 'citizen') return scores.c;
+  if (group === 'environment') return scores.e;
+  return 0;
+}
+
+// ============================================
+// BUILD GAME TABLE
+// ============================================
+function buildGameTable() {
+  const tbody = document.getElementById('gameBody');
+  tbody.innerHTML = '';
+  
+  const selectHTML = `
+    <select id="ID" onchange="updateSelectStyle(this); calcScores()">
+      <option value="">—</option>
+      <option value="1">✓ Preference</option>
+      <option value="0">✗ Restricted</option>
+    </select>
+  `;
+  
+  hexes.forEach((hex, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="hex-id">${hex.id}</td>
+      <td class="land-use">${hex.land.replace(/_/g, ' ')}</td>
+      <td class="${hex.road ? 'road-yes' : 'road-no'}">${hex.road ? '🛣️' : '—'}</td>
+      <td class="input-cell">${selectHTML.replace('ID', `f_${i}`)}</td>
+      <td class="input-cell">${selectHTML.replace('ID', `c_${i}`)}</td>
+      <td class="input-cell">${selectHTML.replace('ID', `i_${i}`)}</td>
+      <td class="input-cell">${selectHTML.replace('ID', `e_${i}`)}</td>
+      <td class="score-col" style="display:none" id="r1f_${i}">0</td>
+      <td class="score-col" style="display:none" id="r1c_${i}">0</td>
+      <td class="score-col" style="display:none" id="r1i_${i}">0</td>
+      <td class="score-col" style="display:none" id="r1e_${i}">0</td>
+      <td class="score-col" style="display:none" id="r2f_${i}">0</td>
+      <td class="score-col" style="display:none" id="r2c_${i}">0</td>
+      <td class="score-col" style="display:none" id="r2i_${i}">0</td>
+      <td class="score-col" style="display:none" id="r2e_${i}">0</td>
+    `;
+    tbody.appendChild(tr);
+    // Apply initial style
+    updateSelectStyle(document.getElementById(`f_${i}`));
+    updateSelectStyle(document.getElementById(`c_${i}`));
+    updateSelectStyle(document.getElementById(`i_${i}`));
+    updateSelectStyle(document.getElementById(`e_${i}`));
+  });
+  
+  // Add totals row
+  const tfoot = document.getElementById('gameFoot');
+  tfoot.innerHTML = `
+    <tr>
+      <td colspan="3">TOTAL</td>
+      <td></td><td></td><td></td><td></td>
+      <td class="score-col" style="display:none" id="total_r1f">0</td>
+      <td class="score-col" style="display:none" id="total_r1c">0</td>
+      <td class="score-col" style="display:none" id="total_r1i">0</td>
+      <td class="score-col" style="display:none" id="total_r1e">0</td>
+      <td class="score-col" style="display:none" id="total_r2f">0</td>
+      <td class="score-col" style="display:none" id="total_r2c">0</td>
+      <td class="score-col" style="display:none" id="total_r2i">0</td>
+      <td class="score-col" style="display:none" id="total_r2e">0</td>
+    </tr>
+  `;
+}
+
+// ============================================
+// TOGGLE SCORES VISIBILITY
+// ============================================
+function toggleScores() {
+  const show = document.getElementById('showScores').checked;
+  document.querySelectorAll('.score-col').forEach(el => {
+    el.style.display = show ? '' : 'none';
+  });
+}
+
+// ============================================
+// UPDATE SELECT STYLE
+// ============================================
+function updateSelectStyle(sel) {
+  sel.classList.remove('select-prefer', 'select-restrict');
+  if (sel.value === '1') {
+    sel.classList.add('select-prefer');
+  } else if (sel.value === '0') {
+    sel.classList.add('select-restrict');
+  }
+}
+
+// ============================================
+// CALCULATE SCORES
+// ============================================
+function calcScores() {
+  readConfigInputs();
+  
+  let totals = {r1f:0, r1c:0, r1i:0, r1e:0, r2f:0, r2c:0, r2i:0, r2e:0};
+  
+  hexes.forEach((hex, i) => {
+    const fVal = document.getElementById(`f_${i}`).value.trim();
+    const cVal = document.getElementById(`c_${i}`).value.trim();
+    const iVal = document.getElementById(`i_${i}`).value.trim();
+    const eVal = document.getElementById(`e_${i}`).value.trim();
+    
+    const votes = {farmer: fVal, citizen: cVal, industry: iVal, environment: eVal};
+    const pvBuilt = (fVal === '1' || cVal === '1' || iVal === '1' || eVal === '1');
+    
+    let r1 = {f:0, c:0, i:0, e:0};
+    let r2 = {f:0, c:0, i:0, e:0};
+    
+    // System 1: Land Type (F/C/E/I all vote, but only F/C/E get land score)
+    // Industry's vote counts as a land type vote (impacts F/C/E),
+    // but Industry's OWN score is NOT included here — that comes from the road system below.
+    // Check if ANY land group restricted this hex
+    const anyLandRestricted = ['farmer', 'citizen', 'environment', 'industry'].some(g => votes[g] === '0');
+    const anyLandPreferred = ['farmer', 'citizen', 'environment', 'industry'].some(g => votes[g] === '1');
+    const landConflict = anyLandRestricted && anyLandPreferred;
+    const hexProtected = anyLandRestricted && !anyLandPreferred;
+    const pvBuiltNoConflict = !anyLandRestricted && anyLandPreferred;
+    
+    if (hexProtected) {
+      // HEX PROTECTED: ALL groups that care about this land get protection points (+)
+      ['farmer', 'citizen', 'environment'].forEach(g => {
+        const key = g === 'farmer' ? 'f' : g === 'citizen' ? 'c' : 'e';
+        r1[key] = getLandScore(hex.land, g);
+      });
+    } else if (pvBuiltNoConflict) {
+      // PV BUILT: ALL groups that care about this land get impact points (-)
+      ['farmer', 'citizen', 'environment'].forEach(g => {
+        const key = g === 'farmer' ? 'f' : g === 'citizen' ? 'c' : 'e';
+        r2[key] = -getLandScore(hex.land, g);
+      });
+    } else if (landConflict) {
+      // CONFLICT: multiple land groups disagree → Round 3
+      // (all scores remain 0)
+    }
+    // If no votes at all: all scores remain 0
+    
+    // System 2: Road Attribute (Industry ONLY)
+    const industryVote = votes.industry;
+    const othersRestricted = ['farmer', 'citizen', 'environment'].some(g => votes[g] === '0');
+    const othersPreferred = ['farmer', 'citizen', 'environment'].some(g => votes[g] === '1');
+    
+    // Road scoring: no conflict cases, just different outcomes
+    if (industryVote === '0' && hex.road) {
+      // Industry restricts road → lost opportunity
+      r1.i = config.road_restricted;
+    } else if (industryVote === '1' && hex.road) {
+      // Industry prefers + has road → good access
+      r2.i = config.road_prefer_has;
+    } else if (industryVote === '1' && !hex.road) {
+      // Industry prefers + no road → must build infrastructure
+      r2.i = config.road_prefer_no;
+    } else if (othersRestricted && hex.road && industryVote !== '0') {
+      // Others restricted road → Industry lost opportunity
+      r1.i = config.road_restricted;
+    } else if (othersPreferred && hex.road && industryVote !== '1') {
+      // Others took the road → Industry loses opportunity
+      r2.i = config.road_other_prefer;
+    }
+    
+    // Update display
+    updateCell(`r1f_${i}`, r1.f);
+    updateCell(`r1c_${i}`, r1.c);
+    updateCell(`r1i_${i}`, r1.i);
+    updateCell(`r1e_${i}`, r1.e);
+    updateCell(`r2f_${i}`, r2.f);
+    updateCell(`r2c_${i}`, r2.c);
+    updateCell(`r2i_${i}`, r2.i);
+    updateCell(`r2e_${i}`, r2.e);
+    
+    // Accumulate totals
+    totals.r1f += r1.f;
+    totals.r1c += r1.c;
+    totals.r1i += r1.i;
+    totals.r1e += r1.e;
+    totals.r2f += r2.f;
+    totals.r2c += r2.c;
+    totals.r2i += r2.i;
+    totals.r2e += r2.e;
+  });
+  
+  // Update totals row
+  updateCell('total_r1f', totals.r1f);
+  updateCell('total_r1c', totals.r1c);
+  updateCell('total_r1i', totals.r1i);
+  updateCell('total_r1e', totals.r1e);
+  updateCell('total_r2f', totals.r2f);
+  updateCell('total_r2c', totals.r2c);
+  updateCell('total_r2i', totals.r2i);
+  updateCell('total_r2e', totals.r2e);
+  
+  // Update summary
+  updateSummary('F', totals.r1f, totals.r2f);
+  updateSummary('C', totals.r1c, totals.r2c);
+  updateSummary('E', totals.r1e, totals.r2e);
+  updateSummary('I', totals.r1i, totals.r2i);
+  updateStepCounts();
+}
+
+function updateCell(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const oldText = el.textContent;
+  const newText = val === 0 ? '0' : (val > 0 ? '+' + val : val);
+  el.textContent = newText;
+  el.className = val > 0 ? 'score-pos' : val < 0 ? 'score-neg' : 'score-zero';
+  el.classList.add('score-col');
+
+  // Pulse animation when value changes
+  if (oldText !== newText) {
+    el.classList.remove('score-pulse');
+    void el.offsetWidth; // Force reflow to restart animation
+    el.classList.add('score-pulse');
+  }
+}
+
+// ============================================
+// TOAST NOTIFICATION
+// ============================================
+function showToast(message) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = message;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+// ============================================
+// LOAD DEMO SCENARIO
+// ============================================
+// Realistic demo: stakeholders protecting their key lands, industry pushing for sealed.
+// Generates ~12 conflicts for an interesting Round 3 negotiation.
+function loadDemo() {
+  const hasVotes = hexes.some((h, i) =>
+    document.getElementById(`f_${i}`).value ||
+    document.getElementById(`c_${i}`).value ||
+    document.getElementById(`i_${i}`).value ||
+    document.getElementById(`e_${i}`).value
+  );
+  if (hasVotes && !confirm('Load demo scenario? This will replace your current votes.')) return;
+
+  // Demo votes: hex_id -> {f, c, i, e}  (0 = restrict, 1 = prefer)
+  const demo = {
+    // Forest — Environment + Citizen protect most
+    'F7':  {e:'0'},              'G3':  {e:'0', c:'0'},
+    'H1':  {e:'0', c:'0'},       'H2':  {e:'0', c:'0'},
+    'H3':  {e:'0', c:'0'},       'H6':  {e:'0'},
+    'I6':  {e:'0', c:'0'},       'L3':  {e:'0', c:'0'},
+    'L4':  {e:'0', c:'0'},       'L5':  {e:'0', c:'0'},
+    'M3':  {e:'0', c:'0'},       'M4':  {e:'0', c:'0'},
+    // Arable — Farmer protects most; Industry wants a few
+    'A6':  {f:'0'},              'B6':  {f:'0'},
+    'C5':  {f:'0'},              'C6':  {f:'0', i:'1'},
+    'D4':  {f:'0'},              'E1':  {f:'0'},
+    'E2':  {f:'0', i:'1'},       'G4':  {f:'0', i:'1'},
+    'G5':  {f:'0'},              'H5':  {f:'0'},
+    'J4':  {f:'0', i:'1'},
+    // Productive agriculture — Farmer protects strongly
+    'D5':  {f:'0'},              'E4':  {f:'0', i:'1'},
+    'E5':  {f:'0', i:'1'},       'F3':  {f:'0'},
+    'F4':  {f:'0'},              'F5':  {f:'0', i:'1'},
+    'K3':  {f:'0'},
+    // Settlement — Citizen protects
+    'E3':  {c:'0'},              'E6':  {c:'0'},
+    'F2':  {c:'0'},              'F6':  {c:'0'},
+    'I3':  {c:'0'},              'I5':  {c:'0'},
+    'J5':  {c:'0'},              'K4':  {c:'0'},
+    // Grassland — Environment protects
+    'G1':  {e:'0'},              'G2':  {e:'0'},
+    'G6':  {e:'0'},              'H7':  {e:'0'},
+    'J3':  {e:'0'},              'J6':  {e:'0', i:'1'},
+    'K5':  {e:'0', i:'1'},
+    // Sealed — Industry prefers all (all have road)
+    'D6':  {i:'1'},              'F1':  {i:'1'},
+    'H4':  {i:'1'},              'I2':  {i:'1'},
+    'I4':  {i:'1'}
+  };
+
+  const demoById = {};
+  Object.entries(demo).forEach(([id, votes]) => { demoById[id] = votes; });
+
+  hexes.forEach((hex, idx) => {
+    const votes = demoById[hex.id] || {};
+    ['f', 'c', 'i', 'e'].forEach(prefix => {
+      const sel = document.getElementById(`${prefix}_${idx}`);
+      if (sel) {
+        sel.value = votes[prefix] || '';
+        updateSelectStyle(sel);
+      }
+    });
+  });
+
+  calcScores();
+  showToast('✓ Demo scenario loaded');
+}
+
+// ============================================
+// BULK ACTION MODAL
+// ============================================
+let bulkState = {
+  action: null,    // 'restrict' | 'prefer'
+  group:  null,    // 'farmer' | 'citizen' | 'industry' | 'environment'
+  selected: new Set()
+};
+
+function openBulkModal(action) {
+  bulkState.action   = action;
+  bulkState.group    = null;
+  bulkState.selected = new Set();
+
+  document.getElementById('bulkModalTitle').textContent =
+    action === 'restrict' ? '🚫 Bulk Restriction (Step 1)' : '⚡ Bulk Preference (Step 2)';
+
+  // Reset UI
+  document.querySelectorAll('.bulk-group-btn').forEach(b => b.classList.remove('active'));
+
+  renderBulkHexGrid();
+  updateBulkCount();
+  document.getElementById('bulkModal').classList.add('active');
+}
+
+function closeBulkModal() {
+  document.getElementById('bulkModal').classList.remove('active');
+}
+
+function selectBulkGroup(group, btn) {
+  bulkState.group = group;
+  document.querySelectorAll('.bulk-group-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateBulkCount();
+}
+
+function renderBulkHexGrid() {
+  const grid = document.getElementById('bulkHexGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  hexes.forEach((hex) => {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'bulk-hex' + (bulkState.selected.has(hex.id) ? ' selected' : '');
+    cell.textContent = hex.id;
+    cell.dataset.hexId = hex.id;
+    cell.title = `${hex.id} · ${hex.land.replace(/_/g, ' ')}${hex.road ? ' · 🛣️' : ''}`;
+    cell.onclick = () => toggleBulkHex(hex.id);
+    grid.appendChild(cell);
+  });
+}
+
+function toggleBulkHex(hexId) {
+  if (bulkState.selected.has(hexId)) bulkState.selected.delete(hexId);
+  else                                bulkState.selected.add(hexId);
+  renderBulkHexGrid();
+  updateBulkCount();
+}
+
+function updateBulkCount() {
+  const count = bulkState.selected.size;
+  document.getElementById('bulkCountInfo').textContent =
+    count + (count === 1 ? ' hex selected' : ' hexes selected');
+  const applyBtn = document.getElementById('bulkApplyBtn');
+  const disabled = !bulkState.group || count === 0;
+  applyBtn.disabled = disabled;
+  applyBtn.style.opacity = disabled ? '0.5' : '1';
+  applyBtn.style.cursor  = disabled ? 'not-allowed' : 'pointer';
+}
+
+function applyBulkAction() {
+  if (!bulkState.group || bulkState.selected.size === 0) {
+    showToast('Select a group and at least one hex first', 'error');
+    return;
+  }
+
+  const groupPrefix = {farmer:'f', citizen:'c', industry:'i', environment:'e'}[bulkState.group];
+  const voteValue   = bulkState.action === 'prefer' ? '1' : '0';
+  let count = 0;
+
+  hexes.forEach((hex, idx) => {
+    if (bulkState.selected.has(hex.id)) {
+      const sel = document.getElementById(`${groupPrefix}_${idx}`);
+      if (sel) {
+        sel.value = voteValue;
+        updateSelectStyle(sel);
+        count++;
+      }
+    }
+  });
+
+  calcScores();
+  closeBulkModal();
+
+  const actionWord = bulkState.action === 'prefer' ? 'preferred' : 'restricted';
+  showToast(`✓ ${count} hexes ${actionWord} for ${bulkState.group}`);
+}
+
+function initBulkModalListeners() {
+  // ESC to close modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('bulkModal').classList.contains('active')) {
+      closeBulkModal();
+    }
+  });
+}
+
+// ============================================
+// LIVE STEP COUNTS (round indicator badges)
+// ============================================
+function updateStepCounts() {
+  let restrictCount = 0;
+  let preferCount   = 0;
+  hexes.forEach((hex, idx) => {
+    ['f', 'c', 'i', 'e'].forEach(prefix => {
+      const val = document.getElementById(`${prefix}_${idx}`);
+      if (!val) return;
+      if (val.value === '0') restrictCount++;
+      if (val.value === '1') preferCount++;
+    });
+  });
+  const rEl = document.getElementById('restrictCount');
+  const pEl = document.getElementById('preferCount');
+  if (rEl) rEl.textContent = restrictCount;
+  if (pEl) pEl.textContent = preferCount;
+}
+
+function updateSummary(group, r1, r2) {
+  const total = r1 + r2;
+  const totalEl = document.getElementById(`sum${group}_Total`);
+  const r1El = document.getElementById(`sum${group}_R1`);
+  const r2El = document.getElementById(`sum${group}_R2`);
+  const statusEl = document.getElementById(`sum${group}_Status`);
+  
+  totalEl.textContent = (total > 0 ? '+' : '') + total;
+  totalEl.style.color = total > 0 ? '#059669' : total < 0 ? '#dc2626' : '#d97706';
+  r1El.textContent = `R1: ${r1 > 0 ? '+' : ''}${r1}`;
+  r2El.textContent = `R2: ${r2 > 0 ? '+' : ''}${r2}`;
+  
+  if (total > 0) {
+    statusEl.textContent = '🟢 Happy';
+    statusEl.className = 'status status-happy';
+  } else if (total < 0) {
+    statusEl.textContent = '🔴 Unhappy';
+    statusEl.className = 'status status-unhappy';
+  } else {
+    statusEl.textContent = '🟡 Neutral';
+    statusEl.className = 'status status-neutral';
+  }
+}
+
+// ============================================
+// RESET GAME
+// ============================================
+function resetGame() {
+  if (!confirm('Reset all inputs? This cannot be undone.')) return;
+  hexes.forEach((hex, i) => {
+    const fSel = document.getElementById(`f_${i}`);
+    const cSel = document.getElementById(`c_${i}`);
+    const iSel = document.getElementById(`i_${i}`);
+    const eSel = document.getElementById(`e_${i}`);
+    fSel.value = '';
+    cSel.value = '';
+    iSel.value = '';
+    eSel.value = '';
+    updateSelectStyle(fSel);
+    updateSelectStyle(cSel);
+    updateSelectStyle(iSel);
+    updateSelectStyle(eSel);
+  });
+  calcScores();
+}
+
+// ============================================
+// TAB NAVIGATION
+// ============================================
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  event.target.closest('.tab').classList.add('active');
+
+  if (pageId === 'game') {
+    calcScores(); // Recalculate when switching to game
+  } else if (pageId === 'results') {
+    generateResults(); // Generate results when switching to results
+  }
+}
+
+// Helper for non-tab elements (e.g. CTA buttons) to switch pages
+function showPageDirect(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  // Activate the matching tab by inspecting its onclick
+  document.querySelectorAll('.tab').forEach(t => {
+    if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(`'${pageId}'`)) {
+      t.classList.add('active');
+    }
+  });
+
+  if (pageId === 'game') {
+    calcScores();
+  } else if (pageId === 'results') {
+    generateResults();
+  }
+}
+
+// ============================================
+// SORT FUNCTIONALITY
+// ============================================
+let currentSort = 'id';
+let sortDirection = 1; // 1 = ascending, -1 = descending
+
+function sortHexes(sortBy) {
+  // Toggle direction if same sort
+  if (currentSort === sortBy) {
+    sortDirection *= -1;
+  } else {
+    currentSort = sortBy;
+    sortDirection = 1;
+  }
+  
+  // Update arrow indicators
+  document.querySelectorAll('.sort-arrow').forEach(arrow => {
+    arrow.textContent = '↕';
+    arrow.classList.remove('active');
+  });
+  const activeArrow = document.getElementById(`arrow-${sortBy}`);
+  if (activeArrow) {
+    activeArrow.textContent = sortDirection === 1 ? '↑' : '↓';
+    activeArrow.classList.add('active');
+  }
+  
+  // Save current inputs
+  const inputs = {};
+  hexes.forEach((hex, i) => {
+    inputs[hex.id] = {
+      f: document.getElementById(`f_${i}`).value,
+      c: document.getElementById(`c_${i}`).value,
+      i: document.getElementById(`i_${i}`).value,
+      e: document.getElementById(`e_${i}`).value
+    };
+  });
+  
+  // Sort hexes
+  hexes.sort((a, b) => {
+    let valA, valB;
+    
+    switch(sortBy) {
+      case 'id':
+        valA = a.id;
+        valB = b.id;
+        return sortDirection * valA.localeCompare(valB);
+      case 'land':
+        valA = a.land;
+        valB = b.land;
+        return sortDirection * valA.localeCompare(valB);
+      case 'road':
+        valA = a.road ? 1 : 0;
+        valB = b.road ? 1 : 0;
+        return sortDirection * (valA - valB);
+      case 'farmer':
+      case 'citizen':
+      case 'industry':
+      case 'environment':
+        const groupMap = {farmer:'f', citizen:'c', industry:'i', environment:'e'};
+        const key = groupMap[sortBy];
+        valA = inputs[a.id][key] === '0' ? 0 : inputs[a.id][key] === '1' ? 1 : 2;
+        valB = inputs[b.id][key] === '0' ? 0 : inputs[b.id][key] === '1' ? 1 : 2;
+        return sortDirection * (valA - valB);
+      default:
+        return 0;
+    }
+  });
+  
+  // Rebuild table
+  buildGameTable();
+  
+  // Restore inputs
+  hexes.forEach((hex, i) => {
+    const data = inputs[hex.id];
+    const fSel = document.getElementById(`f_${i}`);
+    const cSel = document.getElementById(`c_${i}`);
+    const iSel = document.getElementById(`i_${i}`);
+    const eSel = document.getElementById(`e_${i}`);
+    fSel.value = data.f;
+    cSel.value = data.c;
+    iSel.value = data.i;
+    eSel.value = data.e;
+    updateSelectStyle(fSel);
+    updateSelectStyle(cSel);
+    updateSelectStyle(iSel);
+    updateSelectStyle(eSel);
+  });
+  
+  calcScores();
+}
+
+// ============================================
+// FILTER HEXES (search box)
+// ============================================
+function filterHexes() {
+  applyFilters();
+}
+
+// ============================================
+// FILTER TAGS
+// ============================================
+let activeFilters = new Set(['all']);
+
+function toggleFilter(filter, btn) {
+  if (filter === 'all') {
+    // Clicking "All" clears other filters
+    activeFilters = new Set(['all']);
+    document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  } else {
+    // Remove "All" if specific filter selected
+    activeFilters.delete('all');
+    document.querySelector('.filter-tag:first-child').classList.remove('active');
+    
+    // Toggle this filter
+    if (activeFilters.has(filter)) {
+      activeFilters.delete(filter);
+      btn.classList.remove('active');
+    } else {
+      activeFilters.add(filter);
+      btn.classList.add('active');
+    }
+    
+    // If no filters left, re-activate "All"
+    if (activeFilters.size === 0) {
+      activeFilters.add('all');
+      document.querySelector('.filter-tag:first-child').classList.add('active');
+    }
+  }
+  
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = document.getElementById('hexSearch').value.toLowerCase();
+  const rows = document.getElementById('gameBody').querySelectorAll('tr');
+  
+  rows.forEach((row, i) => {
+    const hex = hexes[i];
+    const hexId = hex.id.toLowerCase();
+    const land = hex.land;
+    
+    // Search filter (hex ID only)
+    const matchSearch = !search || hexId.includes(search);
+    
+    // Tag filter (AND logic - all selected tags must match)
+    let matchTag = true;
+    if (!activeFilters.has('all')) {
+      for (const filter of activeFilters) {
+        if (filter === 'road') {
+          if (!hex.road) { matchTag = false; break; }
+        } else {
+          if (land !== filter) { matchTag = false; break; }
+        }
+      }
+    }
+    
+    row.style.display = (matchSearch && matchTag) ? '' : 'none';
+  });
+}
+
+// ============================================
+// GENERATE RESULTS
+// ============================================
+function generateResults() {
+  const consensusList = document.getElementById('consensusList');
+  const conflictList = document.getElementById('conflictList');
+  
+  let consensusHTML = '';
+  let conflictHTML = '';
+  let consensusCount = 0;
+  let conflictCount = 0;
+  
+  hexes.forEach((hex, i) => {
+    const votes = {
+      farmer: document.getElementById(`f_${i}`).value,
+      citizen: document.getElementById(`c_${i}`).value,
+      industry: document.getElementById(`i_${i}`).value,
+      environment: document.getElementById(`e_${i}`).value
+    };
+    
+    const preferred = [];
+    const restricted = [];
+    
+    for (const [group, vote] of Object.entries(votes)) {
+      if (vote === '1') preferred.push(group);
+      if (vote === '0') restricted.push(group);
+    }
+    
+    // Consensus: 2+ groups prefer the same hex
+    if (preferred.length >= 2) {
+      consensusCount++;
+      const badges = preferred.map(g => {
+        const names = {farmer:'🌾 Farmer', citizen:'🏠 Citizen', industry:'🏭 Industry', environment:'🌳 Env'};
+        return `<span class="result-badge prefer">${names[g]}</span>`;
+      }).join('');
+      
+      consensusHTML += `
+        <div class="result-item">
+          <span class="result-hex">${hex.id}</span>
+          <span class="result-land">${hex.land.replace(/_/g, ' ')}</span>
+          <div class="result-groups">${badges}</div>
+        </div>
+      `;
+    }
+    
+    // Conflict: both prefer and restrict on same hex
+    if (preferred.length > 0 && restricted.length > 0) {
+      conflictCount++;
+      const prefBadges = preferred.map(g => {
+        const names = {farmer:'🌾 Farmer', citizen:'🏠 Citizen', industry:'🏭 Industry', environment:'🌳 Env'};
+        return `<span class="result-badge prefer">${names[g]}</span>`;
+      }).join('');
+      
+      const restBadges = restricted.map(g => {
+        const names = {farmer:'🌾 Farmer', citizen:'🏠 Citizen', industry:'🏭 Industry', environment:'🌳 Env'};
+        return `<span class="result-badge restrict">${names[g]}</span>`;
+      }).join('');
+      
+      conflictHTML += `
+        <div class="result-item">
+          <span class="result-hex">${hex.id}</span>
+          <span class="result-land">${hex.land.replace(/_/g, ' ')}</span>
+          <div class="result-groups">
+            <span style="font-size:11px; color:var(--success);">Prefers:</span>
+            ${prefBadges}
+            <span style="font-size:11px; color:var(--warning);">Restricts:</span>
+            ${restBadges}
+          </div>
+        </div>
+      `;
+    }
+  });
+  
+  consensusList.innerHTML = consensusHTML || '<div class="result-empty">No consensus found yet. Make selections in the Game Board.</div>';
+  conflictList.innerHTML = conflictHTML || '<div class="result-empty">No conflicts found. All clear!</div>';
+
+  generateDetailedResults();
+}
+
+// ============================================
+// GENERATE DETAILED RESULTS (50-HEX GRID)
+// ============================================
+function generateDetailedResults() {
+  const grid = document.getElementById('hexGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  hexes.forEach((hex, idx) => {
+    const f   = document.getElementById(`f_${idx}`).value;
+    const c   = document.getElementById(`c_${idx}`).value;
+    const ind = document.getElementById(`i_${idx}`).value;
+    const e   = document.getElementById(`e_${idx}`).value;
+
+    const anyPreferred = (f === '1' || c === '1' || ind === '1' || e === '1');
+    const anyRestricted = (f === '0' || c === '0' || ind === '0' || e === '0');
+
+    let outcome = 'empty';
+    if      (anyPreferred && anyRestricted) outcome = 'conflict';
+    else if (anyPreferred)                  outcome = 'developed';
+    else if (anyRestricted)                 outcome = 'protected';
+
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = `hex-cell ${outcome}`;
+    cell.textContent = hex.id;
+    cell.title = `${hex.id} · ${hex.land.replace(/_/g, ' ')} · ${outcome}`;
+    cell.onclick = () => showPageDirect('game');
+    grid.appendChild(cell);
+  });
+}
+
+// ============================================
+// INITIALIZE
+// ============================================
+loadConfig();
+buildGameTable();
+calcScores();
+initBulkModalListeners();
+</script>
+
+<!-- BULK ACTION MODAL -->
+<div class="modal-overlay" id="bulkModal" onclick="if(event.target===this) closeBulkModal()">
+  <div class="modal" role="dialog" aria-labelledby="bulkModalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="bulkModalTitle">🚫 Bulk Restriction</div>
+      <button type="button" class="modal-close" onclick="closeBulkModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section-label">1. Select a group</div>
+      <div class="bulk-group-selector" id="bulkGroupSelector">
+        <button type="button" class="bulk-group-btn" data-group="farmer" onclick="selectBulkGroup('farmer', this)">
+          <span class="icon">🌾</span>
+          <span>Farmer</span>
+        </button>
+        <button type="button" class="bulk-group-btn" data-group="citizen" onclick="selectBulkGroup('citizen', this)">
+          <span class="icon">🏠</span>
+          <span>Citizen</span>
+        </button>
+        <button type="button" class="bulk-group-btn" data-group="industry" onclick="selectBulkGroup('industry', this)">
+          <span class="icon">🏭</span>
+          <span>Industry</span>
+        </button>
+        <button type="button" class="bulk-group-btn" data-group="environment" onclick="selectBulkGroup('environment', this)">
+          <span class="icon">🌳</span>
+          <span>Env</span>
+        </button>
+      </div>
+
+      <div class="modal-section-label">2. Select hexes</div>
+      <div class="bulk-hex-grid" id="bulkHexGrid">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-info" id="bulkCountInfo">0 hexes selected</div>
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-outline" onclick="closeBulkModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" id="bulkApplyBtn" onclick="applyBulkAction()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
