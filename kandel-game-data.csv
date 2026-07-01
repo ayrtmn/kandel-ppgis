@@ -1,0 +1,49 @@
+HEX,LAND TYPE,ROAD,FARMER,CITIZEN,INDUSTRY,ENV
+A6,Arable Land,—,—,—,—,—
+B6,Arable Land,—,Restricted,—,—,—
+C5,Arable Land,—,Restricted,—,—,—
+C6,Arable Land,✓,Restricted,—,Preference,—
+D4,Arable Land,—,—,—,—,—
+D5,Productive Agriculture,—,—,—,—,—
+D6,Sealed,✓,Preference,Preference,—,Preference
+E1,Arable Land,—,—,—,Preference,—
+E2,Arable Land,✓,—,Preference,Preference,—
+E3,Settlement,✓,—,Restricted,—,—
+E4,Productive Agriculture,✓,—,Preference,Preference,—
+E5,Productive Agriculture,✓,—,—,Preference,—
+E6,Settlement,—,—,Restricted,—,—
+F1,Sealed,✓,Preference,Preference,—,Preference
+F2,Settlement,✓,Preference,—,Preference,Preference
+F3,Productive Agriculture,—,—,—,—,—
+F4,Productive Agriculture,—,—,Preference,Preference,—
+F5,Productive Agriculture,✓,—,Preference,Preference,—
+F6,Settlement,—,—,—,—,—
+F7,Forest,—,—,Restricted,—,—
+G1,Grassland,—,—,—,—,Restricted
+G2,Grassland,—,—,—,—,Restricted
+G3,Forest,—,—,—,—,Restricted
+G4,Arable Land,✓,—,Preference,Preference,—
+G5,Arable Land,—,Restricted,—,—,—
+G6,Grassland,—,Preference,—,—,—
+H1,Forest,—,Preference,—,—,—
+H2,Forest,—,—,—,—,Restricted
+H3,Forest,—,—,—,—,Restricted
+H4,Sealed,✓,Preference,Preference,—,Preference
+H5,Arable Land,—,Restricted,—,—,—
+H6,Forest,—,Preference,Preference,—,Preference
+H7,Grassland,—,—,—,Restricted,—
+I2,Sealed,✓,Preference,Preference,—,Preference
+I3,Settlement,✓,Preference,—,Preference,Preference
+I4,Sealed,✓,Preference,Preference,—,Preference
+I5,Settlement,—,—,Restricted,—,—
+I6,Forest,—,—,—,Restricted,—
+J3,Grassland,—,Preference,Preference,Preference,—
+J4,Arable Land,✓,—,Preference,Preference,—
+J5,Settlement,—,—,Restricted,—,—
+J6,Grassland,✓,Preference,—,—,—
+K3,Productive Agriculture,—,—,Preference,—,—
+K4,Settlement,✓,Preference,—,Preference,Preference
+K5,Grassland,✓,—,—,—,—
+L3,Forest,—,Preference,—,—,—
+L4,Forest,—,—,—,—,—
+L5,Forest,—,—,—,—,—
